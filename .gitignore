@@ -1,0 +1,167 @@
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.geom.Line2D;
+import java.util.Random;
+
+import javax.swing.JApplet;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.Timer;
+
+public class RecursiveTree extends JApplet {
+
+  private JButton start = new JButton("Start");
+	private TreeFractal tree = new TreeFractal();
+	private JButton reset = new JButton("Reset");
+	private JTextField field = new JTextField(5);
+
+	public static void main(String[] args) {
+		JFrame frame = new JFrame();
+		RecursiveTree tree = new RecursiveTree();
+		tree.init();
+		frame.add(tree, BorderLayout.CENTER);
+		frame.setSize(700, 700);
+		frame.setVisible(true);
+	}
+
+	public void init() {
+		setSize(600, 700);
+		add(tree, BorderLayout.CENTER);
+		JPanel p = new JPanel(new FlowLayout());
+		p.add(new JLabel("Detail Level"));
+		p.add(field);
+		p.add(start);
+		p.add(reset);
+		add(p, BorderLayout.SOUTH);
+
+		start.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				tree.start();
+
+			}
+		});
+
+		reset.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				field.setText("");
+				tree.reset();
+
+			}
+
+		});
+
+		field.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tree.setDepth(Integer.parseInt(field.getText()));
+
+			}
+
+		});
+	}
+
+	private class TreeFractal extends JPanel {
+		private int level;
+		private int depth;
+		private int[] angleConstant = new int[] { -60, 5, -45, 45 };
+		private int changeConstant = 30;
+		private int branchLength = 2;
+		private Timer timer = new Timer(1500, new Animation());
+		private int maxDegree = 360;
+
+		protected final void start() {
+			timer.start();
+			setBackground(Color.BLACK);
+
+		}
+
+		protected final void reset() {
+			level = 0;
+			repaint();
+		}
+
+		protected final void setDepth(int depth) {
+			this.depth = depth;
+		}
+
+		protected final void paintComponent(Graphics g) {
+			super.paintComponent(g);
+
+			int x = 300;
+			int y = 670;
+			int startAngle = 0;
+
+			drawFractal(level, (Graphics2D) g, x, y, startAngle);
+
+		}
+
+		private final double degreeToRadian(int angle) {
+			return angle * Math.PI / 180;
+		}
+
+		private final void drawFractal(int level, Graphics2D g, int x, int y,
+				int angle) {
+			if (level == 0)
+				return;
+			int len = (int) (Math.pow(branchLength, level - 1));
+			int x1 = (int) (x - 2 * len * Math.sin(degreeToRadian(angle)));
+			int y1 = (int) (y - 2 * len * Math.cos(degreeToRadian(angle)));
+
+			int mid1x = (x + x1) / 2;
+			int mid1y = (y + y1) / 2;
+			int mid2x = (x1 + mid1x) / 2;
+			int mid2y = (y1 + mid1y) / 2;
+			int mid3x = (x + mid1x) / 2;
+			int mid3y = (y + mid1y) / 2;
+			int mid4x = (mid3x + mid1x) / 2;
+			int mid4y = (mid3y + mid1y) / 2;
+
+			Random rand = new Random();
+			drawFractal(level - 1, g, mid1x, mid1y,
+					(angle + (rand.nextInt(changeConstant) + angleConstant[0])
+							% maxDegree));
+			drawFractal(level - 1, g, mid2x, mid2y,
+					(angle + (rand.nextInt(changeConstant) + angleConstant[1])
+							% maxDegree));
+			drawFractal(level - 1, g, mid3x, mid3y,
+					(angle + (rand.nextInt(changeConstant) + angleConstant[2])
+							% maxDegree));
+			drawFractal(level - 1, g, mid4x, mid4y,
+					(angle + (rand.nextInt(changeConstant) + angleConstant[3])
+							% maxDegree));
+			g.setColor(Color.GREEN.darker());
+			Line2D line1 = new Line2D.Double(x, y, x1, y1);
+
+			g.draw(line1);
+
+		}
+
+		private class Animation implements ActionListener {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				level++;
+				if (level == depth)
+					timer.stop();
+				repaint();
+
+			}
+
+		}
+	}
+}
+
